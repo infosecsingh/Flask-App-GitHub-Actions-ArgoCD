@@ -1,0 +1,40 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build','-t', 'asia-south1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/${_ENVIRONMENT}:$COMMIT_SHA', '.', '-f', '$_DOCKERFILE_NAME' ]
+  #### Pushing Docker Image ####
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        docker push asia-south1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/${_ENVIRONMENT}:$COMMIT_SHA
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: /bin/sh
+    #secretEnv: [ 'GIT_ACCESS_TOKEN' ]
+    args:
+      - '-c'
+      - |
+        git clone https://${_GIT_USER}:${_GIT_ACCESS_TOKEN}@github.com/jarvisconsulting/argocd-test.git
+        echo "Navigating to argocd-gitops repository..."
+        cd argocd-test/argotest
+        echo "image tag is ${_IMAGE_TAG}"
+        sed -i "s|image: .*|image:  asia-south1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/${_ENVIRONMENT}:${_IMAGE_TAG}|" deploy.yaml
+        echo "Pushing changes to k8s manifest repo ..."
+        git config --global user.name "jarvisxanurag"
+        git config --global user.email "anurag.kumar@jarvis.consulting"
+        git add deploy.yaml 
+        git commit -m "Updated IMAGE_TAG in deploy.yaml  to ${_IMAGE_TAG}"
+        git push https://${_GIT_ACCESS_TOKEN}@github.com/jarvisconsulting/argocd-test.git HEAD:master
+#availableSecrets:
+#  secretManager:
+#    - versionName: projects/$PROJECT_NUMBER/secrets/github-access-token/versions/latest
+#      env: 'GIT_ACCESS_TOKEN'
+
+# replace the variables here
+timeout: "2400s"
+substitutions:
+  #_IMAGE_NAME: asia-south1-docker.pkg.dev/bjp-saral/test-argo
+  _ARTIFACT_REPO: argocdtest
+  _ENVIRONMENT: master
+  _IMAGE_TAG: $COMMIT_SHA
+  _DOCKERFILE_NAME: Dockerfile

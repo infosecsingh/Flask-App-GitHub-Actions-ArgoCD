@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: demo-app-deployment
+  namespace: argo-test
 spec:
   replicas: 2
   selector:
@@ -17,3 +18,20 @@ spec:
         image: 1nfosecsingh/demo-app:v20250105121337
         ports:
         - containerPort: 5000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-service
+  namespace: argo-test
+spec:
+  selector:
+    app: demo-app
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+      nodePort: 30008
+  type: NodePort
