@@ -1,9 +1,10 @@
+
 name: Test and Build
 
 on:
   push:
     branches:
-      - master
+      - doc
     paths:
       - '**/*'
 
@@ -50,33 +51,27 @@ jobs:
       # Build the Docker Image
       - name: Build Docker Image
         run: |
-          docker build . -t 1nfosecsingh/demo-app:${{ env.VERSION }} 
+          docker build . -t ${{ secrets.DOCKER_USERNAME }}/demo-app:${{ env.VERSION }} 
       
       # Push the Docker Image
       - name: Push Docker Image
         run: |
-          docker push 1nfosecsingh/demo-app:${{ env.VERSION }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo-app:${{ env.VERSION }}
       
       # UPdate the K8s Manifest Files
       - name: Update K8s Manifests
         run: |
           cat deploy/deploy.yaml
-          sed -i "s|image: 1nfosecsingh/demo-app:.*|image: 1nfosecsingh/demo-app:${{ env.VERSION }}|g" deploy/deploy.yaml
+          sed -i "s|image: ${{ secrets.DOCKER_USERNAME }}/demo-app:.*|image: ${{ secrets.DOCKER_USERNAME }}/demo-app:${{ env.VERSION }}|g" deploy/deploy.yaml
           cat deploy/deploy.yaml
 
       # Update Github
       - name: Commit the changes
         run: |
-          git config --global user.email "<>"
+          git config --global user.email "abishek18hc@gmail.com"
           git config --global user.name "GitHub Actions Bot"
           git add deploy/deploy.yaml
           git commit -m "Update deploy.yaml with new image version - ${{ env.VERSION }}"
-          git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/infosecsingh/Flask-App-GitHub-Actions-ArgoCD.git
-          git push origin master
-
-      
-
-
-        
-      
-
+          # FIXED: Cleaned up the protocol slashes, added the token, and changed the username colon to a slash
+          git remote set-url origin https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/AbhishekHc/Flask-App-GitHub-Actions-ArgoCD.git
+          git push origin doc

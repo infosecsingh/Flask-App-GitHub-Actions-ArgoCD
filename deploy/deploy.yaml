@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: demo-app-deployment
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: demo-app
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: demo-app
-        image: 1nfosecsingh/demo-app:v20250105121337
+        image: abhishekhc/demo-app:v20260720055439
         ports:
         - containerPort: 5000
